@@ -1,4 +1,4 @@
-library(readr); library(dplyr); library(reshape2); library(ggplot2); library(tidyr); library(lubridate); require("png"); require("grid")
+library(readr); library(dplyr); library(reshape2); library(ggplot2); library(tidyr); library(lubridate); library(forcats)
 setwd("~/Offline/dc-homicides-2016")
 currently.dst <- dst(Sys.time())
 crimes_anon <- read_csv("crimes_anon.csv")
@@ -14,24 +14,9 @@ homicides <- crimes_anon %>%
   mutate(offense_report_time = case_when(offense_report_date_dst == TRUE ~ offense_report_time_edt, TRUE ~ offense_report_time_est)) %>%
   select(-starts_with("offense_report_date_"), -starts_with("offense_report_time_"))
 
-#  mutate(offense_dt = substr(offense_report_date, 1, 10), offense_tm = substr(offense_report_date, 12, 20)) %>% 
-#  mutate(offense_mo = substr(offense_dt,6,7), offense_hr = substr(offense_tm, 1,2)) %>%
-#  mutate(offense_report_date_dst = dst(with_tz(offense_report_date, tzone = "America/New_York"))) %>%
-#  mutate(offense_report_date_est = case_when(offense_report_date_dst == FALSE ~ with_tz(offense_report_date, tzone = "Etc/GMT+5"))) %>%
-#  mutate(offense_report_date_edt = case_when(offense_report_date_dst == TRUE ~ with_tz(offense_report_date, tzone = "Etc/GMT+4"))) %>%
-#  mutate(offense_report_date_eastern = case_when(
-#    ## When DST true, local time at time of offense report was UTC-4 ("Etc/GMT+4"); when false, UTC-5 ("Etc/GMT+5"). 
-#    offense_report_date_dst==TRUE ~ with_tz(offense_report_date, tzone = "Etc/GMT+4"),
-#    offense_report_date_dst==FALSE ~ with_tz(offense_report_date, tzone = "Etc/GMT+5")
-#    )
-#  )
-
 homicides_hr <- homicides %>%
   group_by(offense_report_time, identified) %>% 
   summarize(count = n())
-
-teletubby_sun <- readPNG("auln-clipart-teletubbies-2.png")
-bg <- rasterGrob(teletubby_sun, interpolate = TRUE)
 
 plot <- homicides_hr %>% 
   ggplot(aes(x = offense_report_time, y = count, fill = identified))  + 
@@ -41,13 +26,9 @@ plot <- homicides_hr %>%
   ylab("Homicides") + 
   xlab("Hour Offense Reported") +
   ggtitle("Homicide Suspect Identification by Hour Reported", subtitle = "Reported in Washington, DC, in 2016") +
-#  geom_text(aes(label=count), nudge_y = 1) +
   coord_polar() + 
   labs(fill = "Suspect\n Details\nIdentified")
 
-cow_plot <- ggdraw(plot)
-teletubby_plot <- cow_plot + draw_grob(bg, 0, 0, 0.4, 0.4)
-  
 homicides_mo <- homicides %>%
   group_by(offense_mo, identified) %>% 
   summarize(count = n())
